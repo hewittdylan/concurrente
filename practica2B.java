@@ -39,6 +39,23 @@ class LockBakery {
     public void takeLock(int id) {
         eligiendo[id] = true;
         numero[id] = 1 + max(numero);
-         
+        eligiendo[id] = false;
+
+        for (int j = 0; j < numero.length; j++) {
+            while (eligiendo[j]) {} //Espera activa
+            while (numero[j] != 0 && (numero[j] < numero[id] || (numero[j] == numero[id] && j < id))) {}
+        }
+    }
+
+    public void releaseLock(int id) {
+        numero[id] = 0;
+    }
+
+    private int max(int[] array) {
+        int max = 0;
+        for (int n : array) {
+            if (max < n) max = n;
+        }
+        return max;
     }
 }
