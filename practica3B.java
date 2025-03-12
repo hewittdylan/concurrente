@@ -1,3 +1,5 @@
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.concurrent.Semaphore;
 
 class Producto {
@@ -17,19 +19,25 @@ interface Almacen {
     Producto extraer(int idConsumidor);
 }
 
-class AlmacenBuffer implements Almacen {
-    private Producto producto = null;
+class AlmacenBufferN implements Almacen {
+    private final Queue<Producto> buffer;
     private final Semaphore mutex = new Semaphore(1);
-    private final Semaphore lleno = new Semaphore(0);
-    private final Semaphore vacio = new Semaphore(1);
+    private final Semaphore lleno;
+    private final Semaphore vacio;
+
+    public AlmacenBufferN(int capacidad) {
+        this.buffer = new LinkedList<>();
+        this.lleno = new Semaphore(0);
+        this.vacio = new Semaphore(capacidad);
+    }
 
     @Override
     public void almacenar(Producto producto, int idProductor) {
         try {
             vacio.acquire();  //Si el buffer está lleno espera
-            mutex.acquire();  //Exclusión mutua
-            this.producto = producto;
-            System.out.println("[PRODUCTOR] Almacenado producto: " + producto.getId() + " (" + idProductor + ")");
+            mutex.acquire();
+            buffer.add(producto);
+            System.out.println("[PRODUCTOR " + idProductor + "] Almacenado producto: " + producto.getId());
         } catch (InterruptedException e) {
             e.printStackTrace();
         } finally {
@@ -44,8 +52,8 @@ class AlmacenBuffer implements Almacen {
         try {
             lleno.acquire();  //Espera si el buffer está vacío
             mutex.acquire();
-            prod = this.producto;
-            System.out.println("[CONSUMIDOR] Consumido producto: " + prod.getId() + " (" + idConsumidor + ")");
+            prod = buffer.poll();
+            System.out.println("[CONSUMIDOR " + idConsumidor + "] Consumido producto: " + prod.getId());
         } catch (InterruptedException e) {
             e.printStackTrace();
         } finally {
@@ -107,11 +115,12 @@ class Consumidor extends  Thread {
 
 public class practica3B {
     public static void main(String[] args) {
-        Almacen almacen = new AlmacenBuffer();
-        int numProductores = 2;
-        int numConsumidores = 2;
-        int P = 10;  //Num productos por productor
-        int C = 7;  //Num productos por consumidor
+        int capacidad = 5;
+        Almacen almacen = new AlmacenBufferN(capacidad);
+        int numProductores = 3;
+        int numConsumidores = 3;
+        int P = 11;  //Num productos por productor
+        int C = 11;  //Num productos por consumidor
 
         Thread[] productores = new Thread[numProductores];
         Thread[] consumidores = new Thread[numConsumidores];
