@@ -3,10 +3,10 @@ interface  Lock {
 	void releaseLock(int id);
 }
 
-class Contador {
+class Entero {
     private volatile int valor = 0;
 
-    public Contador(int valor) {
+    public Entero(int valor) {
         this.valor = valor;
     }
 
@@ -44,12 +44,12 @@ class LockRompeEmpate implements  Lock {
 }
 
 class Incrementador extends Thread {
-    private final Contador contador;
+    private final Entero entero;
     private final Lock lock;
     private final int id, n;
 
-    public Incrementador(Contador contador, Lock lock, int id, int n) {
-        this.contador = contador;
+    public Incrementador(Entero entero, Lock lock, int id, int n) {
+        this.entero = entero;
         this.lock = lock;
         this.id = id;
         this.n = n;
@@ -59,20 +59,20 @@ class Incrementador extends Thread {
     public void run() {
         for (int i = 0; i < n; i++) {
             lock.takeLock(id);
-            contador.incrementar();
-            System.out.print("Incrementado: " + contador.getValor());
+            entero.incrementar();
+            System.out.print("Incrementado: " + entero.getValor());
             lock.releaseLock(id);
         }
     }
 }
 
 class Decrementador extends Thread {
-    private final Contador contador;
+    private final Entero entero;
     private final Lock lock;
     private final int id, n;
 
-    public Decrementador(Contador contador, Lock lock, int id, int n) {
-        this.contador = contador;
+    public Decrementador(Entero entero, Lock lock, int id, int n) {
+        this.entero = entero;
         this.lock = lock;
         this.id = id;
         this.n = n;
@@ -82,8 +82,8 @@ class Decrementador extends Thread {
     public void run() {
         for (int i = 0; i < n; i++) {
             lock.takeLock(id);
-            contador.decrementar();
-            System.out.print("Decrementado: " + contador.getValor());
+            entero.decrementar();
+            System.out.print("Decrementado: " + entero.getValor());
             lock.releaseLock(id);
         }
     }
@@ -99,11 +99,11 @@ public class practica2A {
         
         Lock lock = new LockRompeEmpate();
 
-        Contador contador = new Contador(0);
+        Entero entero = new Entero(0);
 
         for (int i = 0; i < M; i++) {  //Creamos threads
-            incrementadores[i] = new Incrementador(contador, lock, 0, N);
-            decrementadores[i] = new Decrementador(contador, lock, 1, N);
+            incrementadores[i] = new Incrementador(entero, lock, 0, N);
+            decrementadores[i] = new Decrementador(entero, lock, 1, N);
         }
 
         for (int i = 0; i < M; i++) {  //Iniciamos threads
@@ -116,7 +116,7 @@ public class practica2A {
                 incrementadores[i].join();
                 decrementadores[i].join();
             }
-            System.out.print("Valor final del contador: " + contador.getValor());
+            System.out.print("Valor final del entero: " + entero.getValor());
         } catch (Exception e) {
             e.printStackTrace();
         }
