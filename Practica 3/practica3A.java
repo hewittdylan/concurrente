@@ -1,92 +1,107 @@
 import java.util.concurrent.Semaphore;
 
-class Contador {
-    private int valor = 0;
-    private final Semaphore semaforo;
+class Entero {
+    private volatile int valor;
 
-    public Contador() {
-        this.semaforo = new Semaphore(1);
+    public Entero(int valor) {
+        this.valor = valor;
     }
 
     public void incrementar() {
-        try {
-            semaforo.acquire();  //Bloqueamos el acceso
-            valor++;
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } finally {
-            semaforo.release();  //Liberamos el acceso
-        }
+        this.valor++;
     }
 
     public void decrementar() {
-        try {
-            semaforo.acquire();  //Bloqueamos el acceso
-            valor--;
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } finally {
-            semaforo.release();  //Liberamos el acceso
-        }
+        this.valor--;
     }
 
     public int getValor() {
-        return valor;
+        return this.valor;
+    }
+
+    public void setValor(int valor) {
+        this.valor = valor;
     }
 }
 
-class Incrementador extends Thread {
-    private final Contador contador;
+abstract class Modificacion extends Thread {
+    protected  final Entero entero;
+    private final Semaphore semaphore;
+    private final int id;
     private final int N;
 
-    public Incrementador(Contador contador, int N) {
-        this.contador = contador;
+    public Modificacion(Entero entero, Semaphore semaphore, int id, int N) {
+        this.entero = entero;
+        this.semaphore = semaphore;
+        this.id = id;
         this.N = N;
     }
 
+    protected  abstract void critical();
+
     @Override
     public void run() {
-        for (int i = 0; i < N; i++) contador.incrementar();
+        for (int i = 0; i < N; i++) {
+            try {
+                semaphore.acquire();
+                critical();
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                semaphore.release();
+            }
+        }
+    } 
+}
+
+class Incrementador extends Modificacion {
+
+    public Incrementador(Entero entero, Semaphore semaphore, int id, int N) {
+        super(entero, semaphore, id, N);
+    }
+
+    @Override
+    protected void critical() {
+        super.entero.incrementar();
     }
 }
 
-class Decrementador extends Thread {
-    private final Contador contador;
-    private final int N;
+class Decrementador extends Modificacion {
 
-    public Decrementador(Contador contador, int N) {
-        this.contador = contador;
-        this.N = N;
+    public Decrementador(Entero entero, Semaphore semaphore, int id, int N) {
+        super(entero, semaphore, id, N);
     }
 
     @Override
-    public void run() {
-        for (int i = 0; i < N; i++) contador.decrementar();
+    protected void critical() {
+        super.entero.decrementar();
     }
 }
 
 public class practica3A {
     public static void main(String[] args) {
-        Contador contador = new Contador();
-        int N = 1000;
-        int M = 5;  //Número de hilos
+        
+        int N = 1000;  //Número de incrementos
+        int M = 5;  //Número de hilos de cada tipo
 
-        Thread[] threads = new Thread[2 * M];
+        Modificacion[] modificaciones = new Modificacion[2 * M];
+        Semaphore semaphore = new Semaphore(1);
+        Entero entero = new Entero(0);
 
         for (int i = 0; i < M; i++) {
-            threads[i] = new Incrementador(contador, N);
-            threads[M + i] = new Decrementador(contador, N);
+            modificaciones[i] = new Incrementador(entero, semaphore, i, N);
+            modificaciones[M + i] = new Decrementador(entero, semaphore, M + i, N);
         }
 
-        for (Thread t : threads) t.start();
-        for (Thread t : threads) {
+        for (Modificacion m : modificaciones) m.start();
+        for (Modificacion m : modificaciones) {
             try {
-                t.join();
+                m.join();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
 
-        System.out.print("Valor final del contador: " + contador.getValor());
+        System.out.print("Valor final del contador: " + entero.getValor());
     }
 }

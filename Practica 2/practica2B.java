@@ -6,7 +6,7 @@ interface Lock {
 }
 
 class Entero {
-    private volatile int valor = 0;
+    private volatile int valor;
 
     public Entero(int valor) {
         this.valor = valor;
@@ -42,7 +42,7 @@ abstract class Modificacion extends Thread {
         this.N = N;
     }
 
-    public abstract void critical();
+    protected abstract void critical();
 
     @Override
     public void run() {
@@ -61,7 +61,7 @@ class Incrementador extends Modificacion {
     }
 
     @Override
-    public void critical() {
+    protected void critical() {
         super.entero.incrementar();
     }
 }
@@ -73,7 +73,7 @@ class Decrementador extends Modificacion {
     }
 
     @Override
-    public void critical() {
+    protected void critical() {
         super.entero.decrementar();
     }
 }
@@ -226,9 +226,10 @@ public class practica2B {
 
         try {
             for (int i = 0; i <  2 * M; i++) modificaciones[i].join();
-            System.out.print("Valor final del entero: " + entero.getValor());
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        System.out.print("Valor final del entero: " + entero.getValor());
     }
 }

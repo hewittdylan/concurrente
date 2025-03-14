@@ -4,7 +4,7 @@ interface  Lock {
 }
 
 class Entero {
-    private volatile int valor = 0;
+    private volatile int valor;
 
     public Entero(int valor) {
         this.valor = valor;
@@ -106,10 +106,10 @@ public class practica2A {
         try {
             incrementador.join();
             decrementador.join();
-            System.out.println("Valor final del entero: " + entero.getValor());
         } catch (Exception e) {
             e.printStackTrace();
         }
 
+        System.out.println("Valor final del entero: " + entero.getValor());
     }
 }

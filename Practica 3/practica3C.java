@@ -1,131 +1,152 @@
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+class Contador {
+    private final int maximo;
+    private volatile int valor;
+
+    public Contador(int maximo) {
+        this.maximo = maximo;
+        this.valor = 0;
+    }
+
+    public void incrementar() {
+        this.valor = (this.valor + 1) % this.maximo;
+    }
+
+    public int getValor() {
+        return this.valor;
+    }
+}
 
 class Producto {
-    private final int id;
+    private final String id;
 
-    public Producto(int id) {
+    public Producto(String id) {
         this.id = id;
     }
 
-    public int getId() {
+    public String getId() {
         return this.id;
     }
 }
 
 interface Almacen {
-    void escribir(Producto producto, int pos, int idEscritor);
-    Producto leer(int pos, int idLector);
+    void escribir(Producto producto, int pos);
+    Producto leer(int pos);
 }
 
-class AlmacenLectoresEscritores implements Almacen {
-    private final Producto[] buffer;
-    private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-    private final Semaphore testigo = new Semaphore(1);
+class AlmacenLibros implements Almacen {
+    private Producto[] productos;
+    private final Semaphore writers;
+    private final Semaphore readers;
+    private final Semaphore mutex;
+    private final int capacidad;
 
-    public AlmacenLectoresEscritores(int capacidad) {
-        this.buffer = new Producto[capacidad];
+    public AlmacenLibros(Semaphore writers, Semaphore readers, Semaphore mutex, int capacidad) {
+        this.writers = writers;
+        this.readers = readers;
+        this.mutex = mutex;
+        this.capacidad = capacidad;
+        this.productos = new Producto[capacidad];
     }
 
     @Override
-    public void escribir(Producto producto, int pos, int idEscritor) {
+    public void almacenar(Producto producto) {
         try {
-            testigo.acquire();  //Exclusión mutua para escritores
-            lock.writeLock().lock();
-            buffer[pos] = producto;
-            System.out.println("[ESCRITOR " + idEscritor + "] Escrito producto: " + producto.getId() + " en posición " + pos);
+            vacio.acquire();  //Si el buffer está lleno espera
+            mutexP.acquire();
+            productos[fin.getValor()] = producto;  //Guardamos los elementos por el final
+            fin.incrementar();
+            System.out.println("[PRODUCTOR] Almacenado producto: " + producto.getId());
+            mutexP.release();
+            lleno.release();  //Notifica que hay un producto disponible
         } catch (InterruptedException e) {
             e.printStackTrace();
-        } finally {
-            lock.writeLock().unlock();
-            testigo.release();
         }
     }
 
     @Override
-    public Producto leer(int pos, int idLector) {
-        lock.readLock().lock();
-        Producto prod = buffer[pos];
-        System.out.println("[LECTOR " + idLector + "] Leído producto: " + (prod != null ? prod.getId() : "null") + " de posición " + pos);
-        lock.readLock().unlock();
+    public Producto extraer() {
+        Producto prod = null;
+        try {
+            lleno.acquire();  //Espera si el buffer está vacío
+            mutexC.acquire();
+            prod = productos[ini.getValor()];
+            ini.incrementar();
+            System.out.println("[CONSUMIDOR] Consumido producto: " + (prod == null ? "null" : prod.getId()));
+            mutexC.release();
+            vacio.release();  //Notifica que el buffer está vacío
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } 
         return prod;
     }
 }
 
-class Escritor extends  Thread {
+class Productor extends  Thread {
     private final Almacen almacen;
     private final int P;
     private final int id;
-    private final int capacidad;
 
-    public Escritor(Almacen almacen, int P, int id, int capacidad) {
+    public Productor(Almacen almacen, int P, int id) {
         this.almacen = almacen;
         this.P = P;
         this.id = id;
-        this.capacidad = capacidad;
     }
 
     @Override
     public void run() {
         for (int i = 0; i < P; i++) {
-            int pos = (i + id) % capacidad;
-            Producto prod = new Producto(i);
-            almacen.escribir(prod, pos, id);
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            String idProducto = Integer.toString(id) + " - " + Integer.toString(i);
+            Producto prod = new Producto(idProducto);
+            almacen.almacenar(prod);
         }
     }
 }
 
-class Lector extends  Thread {
+class Consumidor extends  Thread {
     private final Almacen almacen;
     private final int C;
     private final int id;
-    private final int capacidad;
 
-    public Lector(Almacen almacen, int C, int id, int capacidad) {
+    public Consumidor(Almacen almacen, int C, int id) {
         this.almacen = almacen;
         this.C = C;
         this.id = id;
-        this.capacidad = capacidad;
     }
 
     @Override
     public void run() {
         for (int i = 0; i < C; i++) {
-            int pos = (i + id) % capacidad;
-            almacen.leer(pos, id);
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            almacen.extraer();
         }
     }
 }
 
 public class practica3C {
     public static void main(String[] args) {
-        int capacidad = 5;
-        Almacen almacen = new AlmacenLectoresEscritores(capacidad);
-        int numEscritores = 2;
-        int numLectores = 2;
-        int P = 3;  //Num productos por productor
-        int C = 3;  //Num productos por consumidor
+        int numEscritores = 100;
+        int numLectores = 50;
+        int P = 1;  //Num productos por escritor
+        int C = 10;  //Num productos por lector
+        int capacidadAlmacen = 10;
 
-        Thread[] escritores = new Thread[numEscritores];
-        Thread[] lectores = new Thread[numLectores];
+        Semaphore writers = new Semaphore(0);
+        Semaphore readers = new Semaphore(0);
+        Semaphore mutex = new Semaphore(1);
+
+        Almacen almacen = new AlmacenProductos(lleno, vacio, mutexP, mutexC, capacidadAlmacen);
+
+        Escritor[] escritores = new Escritor[numEscritores];
+        Lector[] lectores = new Lector[numLectores];
 
         for (int i = 0; i < numEscritores; i++) {
-            escritores[i] = new Escritor(almacen, P, i, capacidad);
+            escritores[i] = new Escritor(almacen, P, i);
             escritores[i].start();
         }
 
         for (int i = 0; i < numLectores; i++) {
-            lectores[i] = new Lector(almacen, C, i, capacidad);
+            lectores[i] = new Lector(almacen, C, i);
             lectores[i].start();
         }
 
