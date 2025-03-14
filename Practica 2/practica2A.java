@@ -60,7 +60,7 @@ class Incrementador extends Thread {
         for (int i = 0; i < n; i++) {
             lock.takeLock(id);
             entero.incrementar();
-            System.out.print("Incrementado: " + entero.getValor());
+            System.out.println("Incrementado: " + entero.getValor());
             lock.releaseLock(id);
         }
     }
@@ -83,7 +83,7 @@ class Decrementador extends Thread {
         for (int i = 0; i < n; i++) {
             lock.takeLock(id);
             entero.decrementar();
-            System.out.print("Decrementado: " + entero.getValor());
+            System.out.println("Decrementado: " + entero.getValor());
             lock.releaseLock(id);
         }
     }
@@ -91,32 +91,22 @@ class Decrementador extends Thread {
 
 public class practica2A {
     public static void main(String[] args) {
-        int N = 1000;  //Número de incrementos/decrementos que realiza cada hilo
-        int M = 3;  //Número de hilos de cada tipo
-
-        Incrementador[] incrementadores = new Incrementador[M];
-        Decrementador[] decrementadores = new Decrementador[M];
+        int N = 30;  //Número de incrementos/decrementos que realiza cada hilo
         
         Lock lock = new LockRompeEmpate();
 
         Entero entero = new Entero(0);
 
-        for (int i = 0; i < M; i++) {  //Creamos threads
-            incrementadores[i] = new Incrementador(entero, lock, 0, N);
-            decrementadores[i] = new Decrementador(entero, lock, 1, N);
-        }
+        Incrementador incrementador = new Incrementador(entero, lock, 0, N);
+        Decrementador decrementador = new Decrementador(entero, lock, 1, N);
 
-        for (int i = 0; i < M; i++) {  //Iniciamos threads
-            incrementadores[i].start();
-            decrementadores[i].start();
-        }
+        incrementador.start();
+        decrementador.start();
 
         try {
-            for (int i = 0; i < M; i++) {  //Esperamos a que acaben los threads
-                incrementadores[i].join();
-                decrementadores[i].join();
-            }
-            System.out.print("Valor final del entero: " + entero.getValor());
+            incrementador.join();
+            decrementador.join();
+            System.out.println("Valor final del entero: " + entero.getValor());
         } catch (Exception e) {
             e.printStackTrace();
         }

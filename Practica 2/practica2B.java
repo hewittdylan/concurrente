@@ -203,29 +203,29 @@ public class practica2B {
         int N = 1000;  //Número de incrementos/decrementos que realiza cada hilo
         int M = 3;  //Número de hilos de cada tipo
 
-        Modificacion[] modificaciones = new Modificacion[M];
+        Modificacion[] modificaciones = new Modificacion[2 * M];
         Lock lock = new LockBakery(N);
 
         Entero entero = new Entero(0);
 
-        for (int i = 0; i < M / 2; i++) {
+        for (int i = 0; i < M; i++) {
             //Rompe empate
-            //modificaciones[i] = new Incrementador(N, entero, lock, i + 1);
+            modificaciones[i] = new Incrementador(N, entero, lock, i + 1);
             //Bakery
-            modificaciones[i] = new Incrementador(N, entero, lock, i);
+            //modificaciones[i] = new Incrementador(N, entero, lock, i);
         }
 
-        for (int i = M / 2; i < M; i++) {
+        for (int i = M; i < 2 * M; i++) {
             //Rompe empate
-            //modificaciones[i] = new Decrementador(N, entero, lock, i + 1);
+            modificaciones[i] = new Decrementador(N, entero, lock, i + 1);
             //Bakery
-            modificaciones[i] = new Decrementador(N, entero, lock, i);
+            //modificaciones[i] = new Decrementador(N, entero, lock, i);
         }
 
-        for (int i = 0; i < M; i++) modificaciones[i].start();
+        for (int i = 0; i < 2 * M; i++) modificaciones[i].start();
 
         try {
-            for (int i = 0; i < M; i++) modificaciones[i].join();
+            for (int i = 0; i <  2 * M; i++) modificaciones[i].join();
             System.out.print("Valor final del entero: " + entero.getValor());
         } catch (Exception e) {
             e.printStackTrace();
