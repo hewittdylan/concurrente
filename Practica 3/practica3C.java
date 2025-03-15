@@ -60,6 +60,13 @@ class AlmacenEL implements Almacen {
         this.activeReaders = new Contador();
         this.waitingWriters = new Contador();
         this.waitingReaders = new Contador();
+        inicializar();
+    }
+
+    private void inicializar() {
+        for (int i = 0; i < capacidad; i++) {
+            productos[i] = new Producto("INICIAL");
+        }
     }
 
     @Override
