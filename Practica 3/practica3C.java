@@ -86,10 +86,12 @@ class AlmacenEL implements Almacen {
             } 
 
             activeWriters.incrementar();  //Escritor activo
-            mutex.release();
 
             //Escritura del producto
             productos[pos] = producto;
+            //Lo colocamos antes de soltar el mutex para que los print por consola sean consistentes
+            mutex.release();
+            
             System.out.println("[ESCRITOR] Posición: " + pos + ", contenido: " + producto.getId());
 
             mutex.acquire();
@@ -119,7 +121,7 @@ class AlmacenEL implements Almacen {
         try {
             mutex.acquire();  //Exclusión mutua
 
-            if (0 < activeReaders.getValor()) {  //Si hay escritores activos
+            if (0 < activeWriters.getValor()) {  //Si hay escritores activos
                 waitingReaders.incrementar();  //Aumenta el número de lectores en esperaa
                 mutex.release();  //Libera exclusión mutua
                 readers.acquire();  //Espera hasta que no haya escritores
@@ -139,15 +141,15 @@ class AlmacenEL implements Almacen {
             mutex.acquire();
             activeReaders.decrementar();
 
-            if (activeReaders.getValor() == 0 && 0 < waitingReaders.getValor()) {  //Si es el último lector y hay escritores en espera
-                waitingReaders.decrementar();
+            if (activeReaders.getValor() == 0 && 0 < waitingWriters.getValor()) {  //Si es el último lector y hay escritores en espera
+                waitingWriters.decrementar();
                 writers.release();  //Libera un escritor
             } else {
                 mutex.release();
             }
 
         } catch (Exception e) {
-
+            e.printStackTrace();
         }
     }
 }
@@ -196,10 +198,10 @@ class Lector extends  Thread {
 
 public class practica3C {
     public static void main(String[] args) {
-        int numEscritores = 5;
-        int numLectores = 5;
+        int numEscritores = 50;
+        int numLectores = 50;
         int P = 2;  //Num productos por escritor
-        int C = 5;  //Num productos por lector
+        int C = 1;  //Num productos por lector
         int capacidadAlmacen = 3;
 
         Semaphore writers = new Semaphore(0);
