@@ -23,6 +23,7 @@ public class DB {
 	private Map<String, Usuario> usuarios;
 	private ReadWriteController controlador;
 	
+	@SuppressWarnings("unchecked")
 	public DB() {
 		controlador = new SemaforoRW();
 		FileInputStream inputFile = null;

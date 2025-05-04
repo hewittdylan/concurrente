@@ -10,31 +10,40 @@ public class Main {
 	
 	public static void main(String[] args) {
 		scanner = new Scanner(System.in);
-		ClienteIOController.print("Introduzca nombre de usuario: ");
+		ClienteIOController.print("Introduzca su nombre de usuario: ");
 		String nombre = scanner.next();
 		scanner.nextLine();
 		try {
 			cliente = new Cliente(nombre);
 		} catch (ClassNotFoundException | IOException e) {
-			ClienteIOController.error("Error creando cliente. Cerrando aplicación");
+			ClienteIOController.error("Error creando el cliente. Cerrando aplicación");
 			scanner.close();
 			return;
 		}
 		
 		while(conectado) {
-			int acc = menu();
+			menu();
+			int acc = leerOpcion();
 			accion(acc);
+			try {
+				Thread.sleep(200);  //Nos aseguramos de que se imprima el menú después del resultado de la acción
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
 		scanner.close();
 	}
 	
-	private static int menu() {
-		int a;
+	private static void menu() {
 		ClienteIOController.print(" - Menú Principal - ");
 		ClienteIOController.print("1 - Consultar la información del sistema");
 		ClienteIOController.print("2 - Descargar información");
 		ClienteIOController.print("3 - Desconectar");
 		ClienteIOController.print("Acción: ");
+	}
+	
+	private static int leerOpcion() {
+		int a;
 		try {
 			a = scanner.nextInt();
 		} catch (Exception e) {
@@ -55,7 +64,7 @@ public class Main {
 			}
 			break;
 		case 2:
-			ClienteIOController.print("Introduce el nombre del fichero que descargar: ");
+			ClienteIOController.print("Introduce el nombre del fichero que descargar (incluyendo la extensión .txt): ");
 			String fichero = scanner.nextLine();
 			try {
 				cliente.descargarInfo(fichero);

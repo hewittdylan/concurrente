@@ -1,11 +1,10 @@
 package concurrencia;
 
-public class LockRompeEmpate extends Lock {
+public class LockRompeEmpate {
 	private Entero[] in, last;  //Guardamos en last[i] el último proceso que ha llegado al estado i
-								//y en in[i] en qué estado está el proceso 
+	private int N = 10000;		//y en in[i] en qué estado está el proceso 
 	
 	public LockRompeEmpate() {
-		super();
 		last = new Entero[N];
 		in = new Entero[N];
 		for (int i = 0; i < N; i++) {
@@ -14,17 +13,6 @@ public class LockRompeEmpate extends Lock {
 		}
 	}
 	
-	public LockRompeEmpate(int N) {
-		super(N);
-		last = new Entero[N];
-		in = new Entero[N];
-		for (int i = 0; i < N; i++) {
-			in[i] = new Entero(0);
-			last[i] = new Entero(0);
-		}
-	}
-	
-	@Override
 	public void takeLock(int i) {
 		for (int j = 0; j < N; j++) {
 			in[i - 1].setValor(j + 1);
@@ -39,7 +27,6 @@ public class LockRompeEmpate extends Lock {
 		}
 	}
 	
-	@Override
 	public void releaseLock(int i) {
 		in[i - 1].setValor(0);
 	}

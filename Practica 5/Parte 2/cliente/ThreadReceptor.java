@@ -83,7 +83,7 @@ public class ThreadReceptor extends Thread {
 			Mensaje m = new MensajeTexto(TMensaje.M_FIN_EMISION, archivo);
 			escritura.escribir(numThread, m);
 		} catch (IOException e) {
-			ClienteIOController.error("Error enviando el mensaje de fin de transmisión (archivo " + archivo + ")");
+			ClienteIOController.error("Error enviando el mensaje de fin de transmisión (archivo: " + archivo + ")");
 		}
 		desconectar();
 	}

@@ -41,7 +41,7 @@ public class OyenteCliente extends Thread {
 	
 	@Override
 	public void run() {
-		ServerIO.log("Servidor: Iniciando conexión con nuevo cliente");
+		ServerIO.log("Iniciando conexión con nuevo cliente");
 		conectar();
 		if (conectado) {
 			ServerIO.log("Iniciando escucha activa del canal del cliente " + id);
@@ -55,7 +55,7 @@ public class OyenteCliente extends Thread {
 		try {
 			mu = (MensajeUsuario) input.readObject();
 		} catch (ClassNotFoundException | IOException e) {
-			ServerIO.error("Error en el mensaje de conexión (" + id + ")");
+			ServerIO.error("Error en el mensaje de conexión de " + id);
 		}	
 		
 		if (mu.getTipo() != TMensaje.M_CONEXION) {
@@ -67,7 +67,7 @@ public class OyenteCliente extends Thread {
 		Usuario usuario = mu.getContenido();
 		this.id = usuario.getId();
 		ServerIO.log("Solicitud de conexión de " + id);
-		ServerIO.log("Enviando confirmación de conexión a " + id);
+		ServerIO.log("Enviando confirmación de conexión");
 		try {
 			Mensaje m = new MensajeTexto(TMensaje.M_CONFIRMACION_CONEXION, String.valueOf(puertoClienteNuevo));
 			output.writeObject(m);
@@ -93,7 +93,7 @@ public class OyenteCliente extends Thread {
 			conectado = false;
 			return;
 		}
-		ServerIO.log("Conexión con cliente " + id + " establecida correctamente");
+		ServerIO.log("Conexión con " + id + " establecida correctamente");
 	}
 	
 	private void iniciarEscucha() {
@@ -102,7 +102,7 @@ public class OyenteCliente extends Thread {
 			try {
 				m = (Mensaje)input.readObject();
 			} catch (ClassNotFoundException | IOException e) {
-				ServerIO.error("Error leyendo mensaje del cliente " + id + ". Desconectándolo");
+				ServerIO.error("Error leyendo mensaje del cliente " + id + ". Desconectando");
 				conectado = false;
 				try {
 					bd.desconectarUsuario(id);
@@ -114,12 +114,12 @@ public class OyenteCliente extends Thread {
 			
 			switch(m.getTipo()) {
 			case M_LISTA_USUARIOS:
-				ServerIO.log("Solicitada la lista de usuarios (" + id + ")");
+				ServerIO.log(id + "ha solicitado la lista de usuarios");
 				try {
 					bd.enviarUsuarios(id, escritores);
 					ServerIO.log("Enviando la lista de usuarios a " + id);
 				} catch (InterruptedException e) {
-					ServerIO.error("Error enviando la lista de usuarios a " + id + ". Desconectando");
+					ServerIO.error("Error enviando la lista de usuarios a " + id + ". Desconectando servidor");
 					conectado = false;
 				}
 				break;
@@ -144,7 +144,7 @@ public class OyenteCliente extends Thread {
 				break;
 			case M_FIN_EMISION:
 				String f2 = ((MensajeTexto) m).getContenido();
-				ServerIO.log("Cliente " + id + " ha decargado correctamente el fichero " + f2 + " . Actualizando BD");
+				ServerIO.log("El cliente " + id + " ha decargado correctamente el fichero " + f2 + " . Actualizando BD");
 				try {
 					bd.addFicheroUsuario(id, f2);
 				} catch (InterruptedException e) {

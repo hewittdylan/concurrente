@@ -31,7 +31,7 @@ public class Servidor {
 	public void start() {
 		CloseThread ct = new CloseThread();
 		ct.start();
-		ServerIO.log("Servidor iniciado y listo para atender a clientes");
+		ServerIO.log("Servidor iniciado y listo para atender clientes");
 		
 		while (abierto) {
 			try {

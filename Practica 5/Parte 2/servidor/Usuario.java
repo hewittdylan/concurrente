@@ -42,10 +42,10 @@ public class Usuario implements Serializable {
 	@Override
 	public String toString() {
 		StringBuilder s = new StringBuilder();
-		s.append("Usuario: ").append(id);
+		s.append("Nombre del usuario: ").append(id);
 		s.append("\nConectado: ");
 		s.append(conectado ? "Si" : "No");
-		s.append("\nFicheros: ");
+		s.append("\nFicheros de " + id + ": ");
 		for (String f : ficheros) {
 			s.append("\n").append(f);
 		}

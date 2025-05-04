@@ -18,7 +18,7 @@ import java.util.ArrayList;
 
 public class Cliente {
 	protected static final String RUTA_CLIENTES = "./usuarios/";
-	private static final int NUM_HILOS = 0;
+	private static final int NUM_HILO = 0;
 	
 	private String nombreUsuario;
 	private GestorEscritura escritura;
@@ -61,7 +61,7 @@ public class Cliente {
 	
 	public void consultaInfo() throws IOException {
 		Mensaje m = new MensajeVacio(TMensaje.M_LISTA_USUARIOS);
-		escritura.escribir(NUM_HILOS, m);
+		escritura.escribir(NUM_HILO, m);
 	}
 	
 	public void descargarInfo(String archivo) throws IOException {
@@ -71,17 +71,17 @@ public class Cliente {
 				return;
 			}
 		} catch (InterruptedException e) {
-			ClienteIOController.error("Error comprobando si el cliente tiene el fichero");
+			ClienteIOController.error("Error comprobando si el cliente tiene el archivo");
 			return;
 		}
 		Mensaje m = new MensajeTexto(TMensaje.M_PEDIR_FICHERO, archivo);
-		escritura.escribir(NUM_HILOS, m);
+		escritura.escribir(NUM_HILO, m);
 	}
 	
 	public void desconectar() throws IOException, InterruptedException {
 		Mensaje m = new MensajeVacio(TMensaje.M_DESCONECTAR);
-		escritura.escribir(NUM_HILOS, m);
-		escritura.cerrar(NUM_HILOS);
+		escritura.escribir(NUM_HILO, m);
+		escritura.cerrar(NUM_HILO);
 		oyenteServidor.join();
 	}
 	

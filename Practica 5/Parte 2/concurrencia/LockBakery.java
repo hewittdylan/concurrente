@@ -1,16 +1,10 @@
 package concurrencia;
 
-public class LockBakery extends Lock {
+public class LockBakery {
 	private Entero[] turnos;
+	private int N = 10000;
 	
 	public LockBakery() {
-		super();
-		turnos = new Entero[N];
-		for (int i = 0; i < N; i++) turnos[i] = new Entero(0);
-	}
-	
-	public LockBakery(int N) {
-		super(N);
 		turnos = new Entero[N];
 		for (int i = 0; i < N; i++) turnos[i] = new Entero(0);
 	}
@@ -30,7 +24,6 @@ public class LockBakery extends Lock {
         return turno1.getValor() == turno2.getValor() && j < i;
     }
 
-    @Override
     public void takeLock(int i) {
         turnos[i].setValor(1);
         turnos[i].setValor(maxs(turnos) + 1);
@@ -41,7 +34,6 @@ public class LockBakery extends Lock {
         }
     }
 
-    @Override
     public void releaseLock(int i) {
         turnos[i].setValor(0);
     }

@@ -1,28 +1,28 @@
 package cliente;
 
-import concurrencia.LockTicket;
+import concurrencia.LockBakery;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 
 public class GestorEscritura {
-	private LockTicket controlador;
+	private LockBakery controlador;
 	private ObjectOutputStream escritor;
 	
 	public GestorEscritura(ObjectOutputStream obj) {
 		this.escritor = obj;
-		this.controlador = new LockTicket();
+		this.controlador = new LockBakery();
 	}
 	
 	public void escribir(int id, Object obj) throws IOException {
-		controlador.takeLock();
+		controlador.takeLock(id);
 		escritor.writeObject(obj);
 		escritor.flush();
-		controlador.releaseLock();
+		controlador.releaseLock(id);
 	}
 	
 	public void cerrar(int id) throws IOException {
-		controlador.takeLock();
+		controlador.takeLock(id);
 		escritor.close();
-		controlador.releaseLock();
+		controlador.releaseLock(id);
 	}
 }

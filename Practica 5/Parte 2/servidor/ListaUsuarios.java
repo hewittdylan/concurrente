@@ -23,8 +23,10 @@ public class ListaUsuarios implements Serializable {
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
+		sb.append(" - Usuarios en el sistema - ");
 		for (Usuario u : lista) {
 			sb.append(u).append("\n");
+			sb.append(" --------------- ");
 		}
 		return sb.toString();
 	}

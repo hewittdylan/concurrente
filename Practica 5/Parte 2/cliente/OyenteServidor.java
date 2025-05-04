@@ -12,7 +12,7 @@ import mensajes.MensajeTexto;
 import mensajes.TMensaje;
 
 public class OyenteServidor extends Thread {
-	private static final int NUM_HILOS = 1;
+	private static final int NUM_HILO = 1;
 	
 	private String nombre;
 	private ServerSocket sSocket;
@@ -29,11 +29,11 @@ public class OyenteServidor extends Thread {
 		this.ficheros = gf;
 		this.emisores = new ArrayList<>();
 		
-		this.hilosReceptor = NUM_HILOS + 1;
+		this.hilosReceptor = NUM_HILO + 1;
 		this.input = new ObjectInputStream(cs.getInputStream());
 		Mensaje m = (Mensaje) input.readObject();
 		if (m.getTipo() != TMensaje.M_CONFIRMACION_CONEXION) {
-			ClienteIOController.error("No se ha recibido la confirmación de conexión (" + nombre + ")");
+			ClienteIOController.error("No se ha recibido la confirmación de conexión para el cliente: " + nombre);
 			throw new RuntimeException();
 		}
 		this.port = Integer.parseInt(((MensajeTexto) m).getContenido());
@@ -77,17 +77,16 @@ public class OyenteServidor extends Thread {
 			ClienteIOController.print("Información disponible en el sistema: \n" + info);
 			break;
 		case M_FICHERO_INEXISTENTE:
-			String f = ((MensajeTexto) m).getContenido();
-			ClienteIOController.warning("El fichero solicitado (" + f + ") no existe");
+			ClienteIOController.warning("El fichero solicitado no existe");
 			break;
 		case M_PEDIR_FICHERO:  //Creamos otro hilo para el (P2P)
 			String archivo = ((MensajeTexto) m).getContenido();
 			String ip = "localhost";
 			try {
 				MensajeTexto mt = new MensajeTexto(TMensaje.M_PREPARADO_CS, archivo + "-" + ip + "-" + port);
-				escritura.escribir(NUM_HILOS, mt);
+				escritura.escribir(NUM_HILO, mt);
 			} catch (IOException e) {
-				ClienteIOController.error("Error enviando el mensaje de preparado_cs para el archivo " + archivo);
+				ClienteIOController.error("Error enviando el mensaje preparado cliente-servidor para el archivo " + archivo);
 				interrupt();
 				return;
 			}
